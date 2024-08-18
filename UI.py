@@ -176,7 +176,7 @@ class WumpusWorldGUI:
                                 self.world_map[ni][nj] += " S"
 
                 # Add Breeze (B) for Pit (P)
-                if room == 'P':
+                if 'P' in room.split():
                     for di, dj in directions:
                         ni, nj = i + di, j + dj
                         if 0 <= ni < self.N and 0 <= nj < self.N:
@@ -304,6 +304,7 @@ class WumpusWorldGUI:
             room_content.remove('G')
         if 'H_P' in room_content:
             room_content.remove('H_P')
+            self.remove_signals(x, y, ['G_L']) 
             
         self.world_map[x][y] = ' '.join(room_content)
         self.display_map()
@@ -327,6 +328,7 @@ class WumpusWorldGUI:
         if 'W' in room_content:
             room_content.remove('W')
             self.world_map[target_x][target_y] = ' '.join(room_content)
+            self.remove_signals(target_x, target_y, ['S']) 
             self.display_map()
             return True  # Wumpus was killed
 
@@ -355,6 +357,8 @@ class WumpusWorldGUI:
         if self.running:
             percepts = self.get_percepts(self.agent_position)
             move = self.agent.move(percepts)
+            print(percepts)
+            print(self.agent_position)
             self.score = self.agent.score
             self.score_label.config(text=f"Score: {self.score}")
 
@@ -362,6 +366,7 @@ class WumpusWorldGUI:
             self.health_label.config(text=f"Health: {self.health}")  
 
             self.execute_move(move)
+            print(self.agent_position)
             self.root.after(self.run_interval, self._auto_move)
 
     def execute_move(self, move):
@@ -416,6 +421,20 @@ class WumpusWorldGUI:
         current_idx = directions.index(self.agent_direction)
         self.agent_direction = directions[(current_idx + 1) % 4]
         self.display_map()
+
+    def remove_signals(self, x, y, signals):
+        directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]  # Up, Down, Left, Right
+
+        for di, dj in directions:
+            ni, nj = x + di, y + dj
+            if 0 <= ni < self.N and 0 <= nj < self.N:
+                room_content = self.world_map[ni][nj].split()
+                room_content = [item for item in room_content if item not in signals]
+                self.world_map[ni][nj] = ' '.join(room_content)
+
+        # After modifying the map, refresh the display
+        self.display_map()
+
 
 if __name__ == "__main__":
     root = tk.Tk()
