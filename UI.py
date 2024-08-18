@@ -16,6 +16,7 @@ class WumpusWorldGUI:
         self.N = 10
         self.logic_steps = []
         self.current_step = 0
+        self.text_position = 10  # To keep track of where to add new text in the logic frame
         self.smoke_image = tk.PhotoImage(file="image/smoke-png-525.png").subsample(5, 5)
         self.smoke_coverage = [[True for _ in range(self.N)] for _ in range(self.N)]
 
@@ -36,15 +37,12 @@ class WumpusWorldGUI:
             "left": tk.PhotoImage(file="image/agent_left.png").subsample(2, 2),
             "right": tk.PhotoImage(file="image/agent_right.png").subsample(2, 2)
         }
-
         # Create frames
         self.create_menu_frame()
         self.create_map_frame()
         self.create_control_frame()
         self.create_logic_frame()
 
-        # Bind keys to movement
-        self.bind_keys()
 
     def create_menu_frame(self):
         menu_frame = tk.Frame(self.root)
@@ -69,9 +67,6 @@ class WumpusWorldGUI:
         next_button = tk.Button(control_frame, text="Next Step", command=self.next_step)
         next_button.pack(pady=5)
 
-        prev_button = tk.Button(control_frame, text="Previous Step", command=self.prev_step)
-        prev_button.pack(pady=5)
-
         run_button = tk.Button(control_frame, text="Run", command=self.run_agent)
         run_button.pack(pady=5)
 
@@ -88,23 +83,26 @@ class WumpusWorldGUI:
     def create_logic_frame(self):
         # Frame for propositional logic steps
         self.logic_frame = tk.Frame(self.root)
-        self.logic_frame.pack(side="bottom", fill="both", padx=5, pady=5)
+        self.logic_frame.pack(side="right", fill="both", expand=True, padx=5, pady=5)
 
-        # Create top frame for general information
-        self.logic_frame_top = tk.Frame(self.logic_frame)
-        self.logic_frame_top.pack(side="top", fill="both", expand=True)
+        # Create a Scrollbar
+        self.scrollbar = tk.Scrollbar(self.logic_frame)
+        self.scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
 
-        # Create bottom frame for detailed information
-        self.logic_frame_bottom = tk.Frame(self.logic_frame)
-        self.logic_frame_bottom.pack(side="bottom", fill="both", expand=True)
+        # Create a Canvas for logic steps and associate it with the scrollbar
+        self.logic_canvas = tk.Canvas(self.logic_frame, bg="white", yscrollcommand=self.scrollbar.set)
+        self.logic_canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
-        # Create Canvas for top logic steps
-        self.logic_canvas_top = tk.Canvas(self.logic_frame_top, bg="white")
-        self.logic_canvas_top.pack(fill=tk.BOTH, expand=True)
+        # Configure the scrollbar
+        self.scrollbar.config(command=self.logic_canvas.yview)
 
-        # Create Canvas for bottom logic steps
-        self.logic_canvas_bottom = tk.Canvas(self.logic_frame_bottom, bg="white")
-        self.logic_canvas_bottom.pack(fill=tk.BOTH, expand=True)
+        # Create a Frame inside the Canvas to hold the text
+        self.text_frame = tk.Frame(self.logic_canvas, bg="white")
+        self.logic_canvas.create_window((0, 0), window=self.text_frame, anchor="nw")
+
+        # Update the scroll region whenever the size of the content changes
+        self.text_frame.bind("<Configure>", lambda e: self.logic_canvas.configure(scrollregion=self.logic_canvas.bbox("all")))
+
 
 
     def sync_logic_frame_size(self):
@@ -113,24 +111,44 @@ class WumpusWorldGUI:
         map_height = self.canvas.winfo_height()
 
         # Set the width of the top canvas to the width of the map
-        self.logic_canvas_top.config(width=map_width // 2, height=map_height // 2)
-        
-        # Set the width of the bottom canvas to the width of the map
-        self.logic_canvas_bottom.config(width=map_width // 2, height=map_height // 2)
+        self.logic_canvas.config(width=map_width // 2, height=map_height)
 
 
     def load_map(self):
         file_path = filedialog.askopenfilename(title="Select Map File", filetypes=[("Text Files", "*.txt")])
         if file_path:
+            # Reset game state
+            self.health = 100
+            self.score = 0
+            self.agent_position = (9, 0)
+            self.agent_direction = "right"
+            self.smoke_coverage = [[True for _ in range(self.N)] for _ in range(self.N)]
+            self.smoke_coverage[9][0] = False  # Uncover the initial position
+            self.agent = Agent()  # Reset the agent
+            self.logic_steps = []
+            self.current_step = 0
+            self.text_position = 10  # Reset text position in logic frame
+
+            # Clear the previous map and logic display
+            self.canvas.delete("all")
+            for widget in self.text_frame.winfo_children():
+                widget.destroy()
+
+            # Load the new map
             self.N, self.world_map = self.read_map(file_path)
             self.add_signals()
             self.display_map()
-            self.logic_steps = []  # Clear previous logic steps
-            self.current_step = 0
-            self.update_logic_frame("Map loaded. Starting simulation.", "")
-            
+
+            # Update health and score labels
+            self.health_label.config(text=f"Health: {self.health}")
+            self.score_label.config(text=f"Score: {self.score}")
+
+            # Update the logic frame with initial message
+            self.update_logic_frame("Map loaded. Starting simulation.")
+
             # Delay to ensure the canvas size is updated
             self.root.after(100, self.sync_logic_frame_size)  # Adjust timing as needed
+
 
     def read_map(self, filename):
         with open(filename, 'r') as file:
@@ -244,45 +262,17 @@ class WumpusWorldGUI:
         }.get(symbol, 'black')
 
 
-    def update_logic_frame(self, text_top, text_bottom):
-        self.logic_canvas_top.delete("all")  # Clear the top canvas
-        self.logic_canvas_top.create_text(10, 10, anchor=tk.NW, text=text_top, fill="black", font=("Arial", 10))
-
-        self.logic_canvas_bottom.delete("all")  # Clear the bottom canvas
-        self.logic_canvas_bottom.create_text(10, 10, anchor=tk.NW, text=text_bottom, fill="black", font=("Arial", 10))
+    def update_logic_frame(self, text_top):
+        # Append new content at the current text position
+        top_text_label = tk.Label(self.text_frame, text=text_top, anchor="nw", justify="left", bg="white", font=("Arial", 10))
+        top_text_label.pack(anchor="nw", padx=10, pady=(self.text_position, 0))
 
 
     def next_step(self):
-        if self.current_step < len(self.logic_steps) - 1:
-            self.current_step += 1
-            self.update_logic_frame(self.logic_steps[self.current_step])
-
-    def prev_step(self):
-        if self.current_step > 0:
-            self.current_step -= 1
-            self.update_logic_frame(self.logic_steps[self.current_step])
-    
-    def move_agent(self):
         percepts = self.get_percepts(self.agent_position)
         move = self.agent.move(percepts)
-
-        if move == 'F':
-            self._move_agent_position(self.agent_direction)
-        elif move == 'L':
-            self._turn_agent('left')
-        elif move == 'R':
-            self._turn_agent('right')
-        elif move == 'G':
-            self._grab_item()
-        elif move == 'S':
-            self._shoot_arrow()
-        elif move == 'C':
-            self._climb_exit()
-        elif move == 'H':
-            self._heal()
-
-        # Redraw the map after each move
-        self.display_map()
+        
+        self.execute_move(move)
 
     def _move_agent_position(self, direction):
         x, y = self.agent_position
@@ -293,7 +283,7 @@ class WumpusWorldGUI:
         elif direction == "left" and y > 0:
             y -= 1
         elif direction == "right" and y < self.N - 1:
-            y += 1
+            y += 1  
 
         self.agent_position = (x, y)
         self.smoke_coverage[x][y] = False
@@ -302,28 +292,9 @@ class WumpusWorldGUI:
     def get_percepts(self, position):
         i, j = position
         room_content = self.world_map[i][j].split()
-        percepts = [item for item in room_content if item in ['S', 'B', 'W_H', 'G_L']]
+        percepts = [item for item in room_content if item in ['S', 'B', 'W_H', 'G_L', 'W', 'P', 'G', 'P_G', 'H_P']]
         return percepts
     
-    def _turn_agent(self, turn_direction):
-        if turn_direction == 'left':
-            if self.agent_direction == "up":
-                self.agent_direction = "left"
-            elif self.agent_direction == "left":
-                self.agent_direction = "down"
-            elif self.agent_direction == "down":
-                self.agent_direction = "right"
-            elif self.agent_direction == "right":
-                self.agent_direction = "up"
-        elif turn_direction == 'right':
-            if self.agent_direction == "up":
-                self.agent_direction = "right"
-            elif self.agent_direction == "right":
-                self.agent_direction = "down"
-            elif self.agent_direction == "down":
-                self.agent_direction = "left"
-            elif self.agent_direction == "left":
-                self.agent_direction = "up"
 
     def _grab_item(self):
         x, y = self.agent_position
@@ -331,17 +302,15 @@ class WumpusWorldGUI:
         
         if 'G' in room_content:
             room_content.remove('G')
-            self.score += 100  # Assuming grabbing gold increases score by 100
         if 'H_P' in room_content:
             room_content.remove('H_P')
-            self.score += 50  # Assuming grabbing healing potion increases score by 50
             
         self.world_map[x][y] = ' '.join(room_content)
         self.display_map()
 
     def _shoot_arrow(self):
         x, y = self.agent_position
-        
+
         if self.agent_direction == "up" and x > 0:
             target_x, target_y = x - 1, y
         elif self.agent_direction == "down" and x < self.N - 1:
@@ -351,16 +320,18 @@ class WumpusWorldGUI:
         elif self.agent_direction == "right" and y < self.N - 1:
             target_x, target_y = x, y + 1
         else:
-            return  # No valid target
-        
+            return False  # No valid target
+
         room_content = self.world_map[target_x][target_y].split()
-        
+
         if 'W' in room_content:
             room_content.remove('W')
-            self.score += 200  # Assuming killing Wumpus increases score by 200
-        
-        self.world_map[target_x][target_y] = ' '.join(room_content)
+            self.world_map[target_x][target_y] = ' '.join(room_content)
+            self.display_map()
+            return True  # Wumpus was killed
+
         self.display_map()
+        return False  
 
     def _climb_exit(self):
         message = f"Agent finished Wumpus World with score: {self.score} and health: {self.health}"
@@ -368,12 +339,8 @@ class WumpusWorldGUI:
 
     def _heal(self):
         # Assuming each healing potion restores 25 health
-        self.health = min(self.health + 25, 100)
-        self.health_label.config(text=f"Health: {self.health}")  # Assuming there's a label to display health
-
-
-    def bind_keys(self):
-        self.root.bind("<space>", lambda event: self.move_agent())
+        self.health = self.agent.health
+        self.health_label.config(text=f"Health: {self.health}")
 
     def run_agent(self):
         """Start running the agent automatically."""
@@ -388,12 +355,30 @@ class WumpusWorldGUI:
         if self.running:
             percepts = self.get_percepts(self.agent_position)
             move = self.agent.move(percepts)
+            self.score = self.agent.score
+            self.score_label.config(text=f"Score: {self.score}")
+
+            self.health = self.agent.health
+            self.health_label.config(text=f"Health: {self.health}")  
 
             self.execute_move(move)
             self.root.after(self.run_interval, self._auto_move)
 
     def execute_move(self, move):
+        killed = False
         """Execute the move returned by the agent."""
+        move_actions = {
+            'F': "Forward",
+            'L': "Turn Left",
+            'R': "Turn Right",
+            'G': "Grab",
+            'S': "Shoot Arrow",
+            'C': "Exit the Cave",
+            'H': "Heal"
+        }
+
+        action_name = move_actions.get(move, "Unknown Action")
+
         if move == 'F':
             self._move_agent_position(self.agent_direction)
         elif move == 'L':
@@ -403,11 +388,21 @@ class WumpusWorldGUI:
         elif move == 'G':
             self._grab_item()
         elif move == 'S':
-            self._shoot_arrow()
+            killed = self._shoot_arrow()
         elif move == 'C':
             self._climb_exit()
         elif move == 'H':
             self._heal()
+
+        self.score = self.agent.score
+        self.score_label.config(text=f"Score: {self.score}")
+
+        self.health = self.agent.health
+        self.health_label.config(text=f"Health: {self.health}")
+
+        self.update_logic_frame(f"Agent performed move: {action_name}")
+        if killed:
+            self.update_logic_frame(f"Agent heard the scream!")
 
     def _turn_left(self):
         directions = ["up", "left", "down", "right"]
@@ -421,9 +416,6 @@ class WumpusWorldGUI:
         current_idx = directions.index(self.agent_direction)
         self.agent_direction = directions[(current_idx + 1) % 4]
         self.display_map()
-
-
-
 
 if __name__ == "__main__":
     root = tk.Tk()

@@ -16,14 +16,14 @@ class Agent:
 		self.size = 10
 		self.KB = Knowledge(self.size)
 
-		self.position = (10, 1)
+		self.position = (1, 1)
 		self.direction = 0
 		self.score = 0
 		self.health = 100
 		self.has_potion = False
 
 		self.history = []
-		self.visited = set({(10, 1)})
+		self.visited = set({(1, 1)})
 
 # Private
 	def __update(self, properties):
