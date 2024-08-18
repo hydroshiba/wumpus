@@ -17,6 +17,7 @@ class Agent:
 		self.KB = Knowledge(self.size)
 
 		self.position = (1, 1)
+		self.last_position = (1, 1)
 		self.direction = 0
 		self.score = 0
 		self.health = 100
@@ -40,21 +41,23 @@ class Agent:
 
 		# Update agent stats
 		for property in properties:
-			if property == 'P_G': self.health = max(0, self.health - 25)
+			if property == 'P_G' and self.position != self.last_position:
+				self.health = max(0, self.health - 25)
 			if property == 'P':
 				self.health = 0
 				self.score -= 10000
 			if property == 'W':
 				self.health = 0
 				self.score -= 10000
-			if property == 'G':
-				self.score += 5000
 
-	def __safe(self, x, y):
-		return not(self.KB.possible('W', x, y) or self.KB.possible('P', x, y) or self.KB.possible('P_G', x, y))
+	def __safe(self, x, y, fail_hard = True):
+		if fail_hard:
+			return not(self.KB.possible('W', x, y) or self.KB.possible('P', x, y) or self.KB.possible('P_G', x, y))
+		else:
+			return not(self.KB.certain('W', x, y) or self.KB.certain('P', x, y) or self.KB.certain('P_G', x, y))
 
-	def __search(self):
-		goal = [pos for pos in itertools.product(range(1, self.size + 1), repeat = 2) if self.__safe(*pos) and pos not in self.visited]
+	def __search(self, fail_hard = True):
+		goal = [pos for pos in itertools.product(range(1, self.size + 1), repeat = 2) if self.__safe(*pos, fail_hard) and pos not in self.visited]
 		if len(goal) == 0: goal = [(0, 0)]
 		
 		visited = set()
@@ -74,6 +77,7 @@ class Agent:
 		while not frontier.empty():
 			node = frontier.get()
 			state, par, act, dir, score, health, potion = node.state, node.parent, node.action, node.dir, node.score, node.health, node.potion
+			# print(state, par, act, dir, score, health, potion)
 
 			if state in visited: continue
 			if health <= 0: continue
@@ -86,13 +90,13 @@ class Agent:
 			
 			directions = [(0, 1), (1, 0), (0, -1), (-1, 0)]
 			action_cost = {
-				'F': -10,
-				'L': -10,
-				'R': -10,
-				'G': -10,
-				'S': -100,
-				'C': +10,
-				'H': -10,
+				'F': -10, # Forward
+				'L': -10, # Left
+				'R': -10, # Right
+				'G': -10, # Grab
+				'S': -100, # Shoot
+				'C': +10, # Climb
+				'H': -10, # Heal
 			}
 
 			for action in action_cost:
@@ -112,8 +116,12 @@ class Agent:
 				elif action == 'R':
 					new_dir = (dir + 3) % 4
 				elif action == 'G':
-					if not self.KB.certain('H_P', x, y): continue
-					new_potion = True
+					new_potion = self.KB.certain('H_P', x, y)
+					gold = self.KB.certain('G', x, y)
+					
+					if not (gold or new_potion): continue
+					if gold: new_score += 5000
+					else: new_potion = new_potion or potion
 				elif action == 'C':
 					if (x, y) != (1, 1): continue
 					x, y = 0, 0
@@ -122,11 +130,18 @@ class Agent:
 					new_health = min(100, health + 25)
 					new_potion = False
 
-				if self.KB.certain('G', x, y): new_score += 5000
-				if self.KB.possible('P_G', x, y): new_health = max(0, health - 25)
-				if self.KB.possible('P', x, y) or self.KB.possible('W', x, y):
-					new_score -= 10000
-					new_health = 0
+				if fail_hard:
+					if self.KB.possible('P_G', x, y) and (x, y) != state[0]:
+						new_health = max(0, health - 25)
+					if self.KB.possible('P', x, y) or self.KB.possible('W', x, y):
+						new_score -= 10000
+						new_health = 0
+				else:
+					if self.KB.certain('P_G', x, y) and (x, y) != state[0]:
+						new_health = max(0, health - 25)
+					if self.KB.certain('P', x, y) or self.KB.certain('W', x, y):
+						new_score -= 10000
+						new_health = 0
 
 				new_score += action_cost[action]
 				frontier.put(Node(
@@ -139,6 +154,8 @@ class Agent:
 					new_potion
 				))
 
+		if fail_hard: return self.__search(fail_hard = False)
+
 	def __trace(self, predecessor: dict, end):
 		actions = []
 
@@ -147,9 +164,13 @@ class Agent:
 			end = predecessor[end][0]
 
 		while len(actions) > 0 and actions[-1] is None: actions.pop()
-		return actions[-1]
+		actions.reverse()
+		print(actions)
+		return actions[0]
 	
 	def __take_action(self, action):
+		self.last_position = self.position
+
 		if action == 'F':
 			dx, dy = [(0, 1), (1, 0), (0, -1), (-1, 0)][self.direction]
 			self.position = (self.position[0] + dx, self.position[1] + dy)
@@ -158,7 +179,8 @@ class Agent:
 		elif action == 'R':
 			self.direction = (self.direction + 3) % 4
 		elif action == 'G':
-			self.has_potion = True
+			if self.KB.certain('H_P', *self.position): self.has_potion = True
+			elif self.KB.certain('G', *self.position): self.score += 5000
 		elif action == 'C':
 			self.position = (0, 0)
 		elif action == 'H':
@@ -182,6 +204,6 @@ class Agent:
 # Public
 	def move(self, properties):
 		self.__update(properties)
-		action = self.__search()
+		action = 'G' if ('G' in properties) or ('H_P' in properties) else self.__search()
 		self.__take_action(action)
 		return action
