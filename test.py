@@ -12,3 +12,4 @@ percepts = ['G_L', 'W_H']
 
 move = agent.move(percepts)
 print(move)
+print(agent.KB)
