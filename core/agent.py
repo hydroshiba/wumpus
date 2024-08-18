@@ -164,9 +164,7 @@ class Agent:
 			end = predecessor[end][0]
 
 		while len(actions) > 0 and actions[-1] is None: actions.pop()
-		actions.reverse()
-		print(actions)
-		return actions[0]
+		return actions[-1]
 	
 	def __take_action(self, action):
 		self.last_position = self.position
@@ -205,5 +203,5 @@ class Agent:
 	def move(self, properties):
 		self.__update(properties)
 		action = 'G' if ('G' in properties) or ('H_P' in properties) else self.__search()
-		self.__take_action(action)
+		if action is not None: self.__take_action(action)
 		return action
