@@ -108,14 +108,14 @@ class Agent:
 					x, y = x + dx, y + dy
 					if x < 1 or x > self.size or y < 1 or y > self.size: continue
 				elif action == 'L':
-					new_dir = (dir + 1) % 4
-				elif action == 'R':
 					new_dir = (dir + 3) % 4
+				elif action == 'R':
+					new_dir = (dir + 1) % 4
 				elif action == 'G':
 					if not self.KB.certain('H_P', x, y): continue
 					new_potion = True
 				elif action == 'C':
-					if (x, y) != (1, 1): continue
+					if (x, y) != (10, 1): continue
 					x, y = 0, 0
 				elif action == 'H':
 					if not potion: continue
@@ -154,9 +154,9 @@ class Agent:
 			dx, dy = [(0, 1), (1, 0), (0, -1), (-1, 0)][self.direction]
 			self.position = (self.position[0] + dx, self.position[1] + dy)
 		elif action == 'L':
-			self.direction = (self.direction + 1) % 4
-		elif action == 'R':
 			self.direction = (self.direction + 3) % 4
+		elif action == 'R':
+			self.direction = (self.direction + 1) % 4
 		elif action == 'G':
 			self.has_potion = True
 		elif action == 'C':
