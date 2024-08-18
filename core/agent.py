@@ -30,14 +30,14 @@ class Agent:
 	def __update(self, properties):
 		all_properties = ['B', 'S', 'W_H', 'G_L', 'P', 'W', 'P_G', 'H_P', 'G']
 
-		# Clear previous percepts
+		# Update knowledge
 		for property in all_properties:
-			self.KB.remove(property, *self.position, True)
-			self.KB.remove(property, *self.position, False)
-
-		# Add new percepts
-		for property in all_properties:
-			self.KB.add(property, *self.position, property in properties)
+			if property in properties:
+				self.KB.remove(property, *self.position, False)
+				self.KB.add(property, *self.position, True)
+			else:
+				self.KB.remove(property, *self.position, True)
+				self.KB.add(property, *self.position, False)
 
 		# Update agent stats
 		for property in properties:
@@ -203,5 +203,7 @@ class Agent:
 	def move(self, properties):
 		self.__update(properties)
 		action = 'G' if ('G' in properties) or ('H_P' in properties) else self.__search()
+		print('Queries asked: ', self.KB.queries)
+		self.KB.queries = 0
 		if action is not None: self.__take_action(action)
 		return action

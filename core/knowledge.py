@@ -19,8 +19,11 @@ class Knowledge:
 		}
 		
 		self.__map = dict()
+		self.__cache = dict()
 		self.__clauses = set()
 		self.__rules = self.__set_rules()
+		
+		self.queries = 0
 
 # Private
 	def __adjacent(self, x, y):
@@ -70,12 +73,16 @@ class Knowledge:
 		return cnf
 	
 	def __query(self, clause):
+		self.queries += 1
+		if clause in self.__cache: return self.__cache[clause]
+
 		cnf = CNF(from_clauses = self.__rules.clauses + [[x] for x in self.__clauses])
 		cnf.append([-clause])
 
 		solver = Glucose3()
 		solver.append_formula(cnf.clauses)
-		return not solver.solve()
+		self.__cache[clause] = not solver.solve()
+		return self.__cache[clause]
 	
 # Public
 	def add(self, property, x, y, existence = True):
@@ -84,8 +91,10 @@ class Knowledge:
 
 	def remove(self, property, x, y, existence = True):
 		clause = self.__symbol(property, x, y) * (1 if existence else -1)
+		
 		if clause in self.__clauses:
 			self.__clauses.remove(clause)
+			self.__cache.clear()
 
 	# Tin chuan chua anh?
 
