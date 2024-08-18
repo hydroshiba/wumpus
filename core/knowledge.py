@@ -23,8 +23,6 @@ class Knowledge:
 		self.__clauses = set()
 		self.__rules = self.__set_rules()
 		
-		self.queries = 0
-
 # Private
 	def __adjacent(self, x, y):
 		cells = [(x - 1, y), (x + 1, y), (x, y - 1), (x, y + 1)]
@@ -64,8 +62,6 @@ class Knowledge:
 			# If the percept doesn't exist, then none of the adjacent cells have the property
 			for i, j in adjacent_cells:
 				cnf.append([stench, -self.__symbol('W', i, j)])
-				cnf.append([-self.__symbol('W', i, j), stench])
-
 				cnf.append([breeze, -self.__symbol('P', i, j)])
 				cnf.append([whiff, -self.__symbol('P_G', i, j)])
 				cnf.append([glow, -self.__symbol('H_P', i, j)])
@@ -73,7 +69,6 @@ class Knowledge:
 		return cnf
 	
 	def __query(self, clause):
-		self.queries += 1
 		if clause in self.__cache: return self.__cache[clause]
 
 		cnf = CNF(from_clauses = self.__rules.clauses + [[x] for x in self.__clauses])
@@ -87,14 +82,19 @@ class Knowledge:
 # Public
 	def add(self, property, x, y, existence = True):
 		clause = self.__symbol(property, x, y) * (1 if existence else -1)
-		self.__clauses.add(clause)
+		if clause not in self.__clauses:
+			self.__clauses.add(clause)
+			self.__cache.clear()
 
 	def remove(self, property, x, y, existence = True):
 		clause = self.__symbol(property, x, y) * (1 if existence else -1)
-		
 		if clause in self.__clauses:
 			self.__clauses.remove(clause)
 			self.__cache.clear()
+
+	def has(self, property, x, y, existence = True):
+		clause = self.__symbol(property, x, y) * (1 if existence else -1)
+		return clause in self.__clauses
 
 	# Tin chuan chua anh?
 

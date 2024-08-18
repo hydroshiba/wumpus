@@ -29,6 +29,13 @@ class Agent:
 # Private
 	def __update(self, properties):
 		all_properties = ['B', 'S', 'W_H', 'G_L', 'P', 'W', 'P_G', 'H_P', 'G']
+		elements = ['P', 'W', 'P_G', 'H_P']
+		percept = {
+			'P': 'B',
+			'W': 'S',
+			'P_G': 'W_H',
+			'H_P': 'G_L'
+		}
 
 		# Update knowledge
 		for property in all_properties:
@@ -36,6 +43,15 @@ class Agent:
 				self.KB.remove(property, *self.position, False)
 				self.KB.add(property, *self.position, True)
 			else:
+				if property in elements and self.KB.has(property, *self.position):
+					x, y = self.position[0], self.position[1]
+					cells = [(x - 1, y), (x + 1, y), (x, y - 1), (x, y + 1)]
+					cells = [(i, j) for i, j in cells if 1 <= i <= self.size and 1 <= j <= self.size]
+
+					for i, j in cells:
+						self.KB.remove(percept[property], i, j, True)
+						self.KB.add(percept[property], i, j, False)
+
 				self.KB.remove(property, *self.position, True)
 				self.KB.add(property, *self.position, False)
 
@@ -50,6 +66,17 @@ class Agent:
 				self.health = 0
 				self.score -= 10000
 
+	def __KB_check(self):
+		for i in range(self.size, 0, -1):
+			for j in range(1, self.size + 1):
+				if (i, j) == self.position: print('X', end = ' ')
+				elif self.KB.possible('W', i, j): print('W', end = ' ')
+				elif self.KB.possible('P', i, j): print('P', end = ' ')
+				elif self.KB.possible('P_G', i, j): print('G', end = ' ')
+				elif self.KB.possible('H_P', i, j): print('H', end = ' ')
+				else: print('.', end = ' ')
+			print()
+
 	def __safe(self, x, y, fail_hard = True):
 		if fail_hard:
 			return not(self.KB.possible('W', x, y) or self.KB.possible('P', x, y) or self.KB.possible('P_G', x, y))
@@ -57,8 +84,8 @@ class Agent:
 			return not(self.KB.certain('W', x, y) or self.KB.certain('P', x, y) or self.KB.certain('P_G', x, y))
 
 	def __search(self, fail_hard = True):
-		goal = [pos for pos in itertools.product(range(1, self.size + 1), repeat = 2) if self.__safe(*pos, fail_hard) and pos not in self.visited]
-		if len(goal) == 0: goal = [(0, 0)]
+		goals = [pos for pos in itertools.product(range(1, self.size + 1), repeat = 2) if self.__safe(*pos, fail_hard) and pos not in self.visited]
+		if len(goals) == 0: goals = [(0, 0)]
 		
 		visited = set()
 		predecessor = dict()
@@ -77,7 +104,6 @@ class Agent:
 		while not frontier.empty():
 			node = frontier.get()
 			state, par, act, dir, score, health, potion = node.state, node.parent, node.action, node.dir, node.score, node.health, node.potion
-			# print(state, par, act, dir, score, health, potion)
 
 			if state in visited: continue
 			if health <= 0: continue
@@ -85,7 +111,7 @@ class Agent:
 			visited.add(state)
 			if predecessor.get(state) is None: predecessor[state] = (par, act)
 
-			if state[0] in goal:
+			if state[0] in goals:
 				return self.__trace(predecessor, state)
 			
 			directions = [(0, 1), (1, 0), (0, -1), (-1, 0)]
@@ -203,7 +229,5 @@ class Agent:
 	def move(self, properties):
 		self.__update(properties)
 		action = 'G' if ('G' in properties) or ('H_P' in properties) else self.__search()
-		print('Queries asked: ', self.KB.queries)
-		self.KB.queries = 0
 		if action is not None: self.__take_action(action)
 		return action
