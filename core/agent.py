@@ -47,10 +47,7 @@ class Agent:
 					x, y = self.position[0], self.position[1]
 					cells = [(x - 1, y), (x + 1, y), (x, y - 1), (x, y + 1)]
 					cells = [(i, j) for i, j in cells if 1 <= i <= self.size and 1 <= j <= self.size]
-
-					for i, j in cells:
-						self.KB.remove(percept[property], i, j, True)
-						self.KB.add(percept[property], i, j, False)
+					for i, j in cells: self.KB.remove(percept[property], i, j, True)
 
 				self.KB.remove(property, *self.position, True)
 				self.KB.add(property, *self.position, False)
