@@ -73,6 +73,7 @@ class Knowledge:
 	
 	def __reset_solver(self):
 		self.__solver = Glucose3(self.__set_rules())
+		self.__cache.clear()
 		for clause in self.__clauses:
 			self.__solver.add_clause([clause])
 	
@@ -84,18 +85,12 @@ class Knowledge:
 # Public
 	def add(self, property, x, y, existence = True):
 		clause = self.__symbol(property, x, y) * (1 if existence else -1)
-		if clause not in self.__clauses:
-			self.__clauses.add(clause)
-			self.__cache.clear()
-
+		if clause not in self.__clauses: self.__clauses.add(clause)
 		self.__reset_solver()
 
 	def remove(self, property, x, y, existence = True):
 		clause = self.__symbol(property, x, y) * (1 if existence else -1)
-		if clause in self.__clauses:
-			self.__clauses.remove(clause)
-			self.__cache.clear()
-
+		if clause in self.__clauses: self.__clauses.remove(clause)
 		self.__reset_solver()
 
 	def has(self, property, x, y, existence = True):
