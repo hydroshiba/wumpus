@@ -16,6 +16,3 @@ Thumbs.db
 
 # Environment variables
 .env
-
-# Test files
-testcase/
