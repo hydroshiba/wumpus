@@ -2,8 +2,9 @@ import tkinter as tk
 from tkinter import filedialog
 import tkinter.messagebox as messagebox
 from core import Agent
+import os
 
-class WumpusWorldGUI:
+class Program:
     def __init__(self, root):
         self.running = False  # Variable to track if the agent is running
         self.run_interval = 500  # Interval in milliseconds between actions
@@ -15,7 +16,7 @@ class WumpusWorldGUI:
         self.world_map = []
         self.N = 10
         self.logic_steps = []
-        self.current_step = 0
+        self.loaded_map_file = ""
         self.text_position = 10  # To keep track of where to add new text in the logic frame
         self.smoke_image = tk.PhotoImage(file="image/smoke-png-525.png").subsample(5, 5)
         self.smoke_coverage = [[True for _ in range(self.N)] for _ in range(self.N)]
@@ -117,6 +118,7 @@ class WumpusWorldGUI:
     def load_map(self):
         file_path = filedialog.askopenfilename(title="Select Map File", filetypes=[("Text Files", "*.txt")])
         if file_path:
+            self.loaded_map_file = file_path
             # Reset game state
             self.health = 100
             self.score = 0
@@ -336,8 +338,11 @@ class WumpusWorldGUI:
         return False  
 
     def _climb_exit(self):
+        self.running = False
         message = f"Agent finished Wumpus World with score: {self.score} and health: {self.health}"
         messagebox.showinfo("Wumpus World", message)
+        self.write_output()
+
 
     def _heal(self):
         # Assuming each healing potion restores 25 health
@@ -357,8 +362,6 @@ class WumpusWorldGUI:
         if self.running:
             percepts = self.get_percepts(self.agent_position)
             move = self.agent.move(percepts)
-            print(percepts)
-            print(self.agent_position)
             self.score = self.agent.score
             self.score_label.config(text=f"Score: {self.score}")
 
@@ -366,7 +369,6 @@ class WumpusWorldGUI:
             self.health_label.config(text=f"Health: {self.health}")  
 
             self.execute_move(move)
-            print(self.agent_position)
             self.root.after(self.run_interval, self._auto_move)
 
     def execute_move(self, move):
@@ -383,6 +385,16 @@ class WumpusWorldGUI:
         }
 
         action_name = move_actions.get(move, "Unknown Action")
+        if action_name == "Unknown Action":
+            self.running = False
+            message = f"Agent got killed !!"
+            messagebox.showinfo("Wumpus World", message)
+            self.write_output()
+
+        output_x = self.N - int(self.agent_position[0])  
+        output_y = int(self.agent_position[1]) + 1
+        tmp_str = "(" + str(output_x) + "," + str(output_y) + "): " + action_name
+        self.logic_steps.append(tmp_str)
 
         if move == 'F':
             self._move_agent_position(self.agent_direction)
@@ -399,6 +411,8 @@ class WumpusWorldGUI:
         elif move == 'H':
             self._heal()
 
+
+
         self.score = self.agent.score
         self.score_label.config(text=f"Score: {self.score}")
 
@@ -408,6 +422,16 @@ class WumpusWorldGUI:
         self.update_logic_frame(f"Agent performed move: {action_name}")
         if killed:
             self.update_logic_frame(f"Agent heard the scream!")
+
+    def write_output(self):
+        input_file_name = os.path.basename(self.loaded_map_file)
+        # Tạo tên file output dựa trên tên file input
+        output_file_name = input_file_name.replace("input", "output")
+        output_file_path = os.path.join(os.getcwd(), output_file_name)
+
+        with open(output_file_path, 'w') as f:
+            for step in self.logic_steps:
+                f.write(step + '\n')
 
     def _turn_left(self):
         directions = ["up", "left", "down", "right"]
@@ -438,5 +462,5 @@ class WumpusWorldGUI:
 
 if __name__ == "__main__":
     root = tk.Tk()
-    gui = WumpusWorldGUI(root)
+    gui = Program(root)
     root.mainloop()
