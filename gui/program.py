@@ -8,7 +8,7 @@ from core import Agent
 
 class Program:
     def __init__(self, root):
-        self.running = False  # Variable to track if the agent is running
+        self.running = False
         self.run_interval = 500  # Interval in milliseconds between actions
 
         self.root = root
@@ -26,7 +26,6 @@ class Program:
         initial_x, initial_y = 9, 0
         self.smoke_coverage[initial_x][initial_y] = False
 
-        # Track the agent's position and direction (initially set to (0, 0) and facing "down")
         self.agent_position = (9, 0)
         self.agent_direction = "right"
 
@@ -76,7 +75,6 @@ class Program:
         pause_button = tk.Button(control_frame, text="Pause", command=self.pause_agent)
         pause_button.pack(pady=5)
 
-        # Add Health and Score Labels
         self.health_label = tk.Label(control_frame, text=f"Health: {self.health}")
         self.health_label.pack(pady=5)
 
@@ -347,7 +345,6 @@ class Program:
 
 
     def _heal(self):
-        # Assuming each healing potion restores 25 health
         self.health = self.agent.health
         self.health_label.config(text=f"Health: {self.health}")
 
@@ -427,13 +424,16 @@ class Program:
 
     def write_output(self):
         input_file_name = os.path.basename(self.loaded_map_file)
-        # Tạo tên file output dựa trên tên file input
         output_file_name = input_file_name.replace("input", "output")
-        output_file_path = os.path.join(os.getcwd(), output_file_name)
+        
+        testcase_folder = os.path.join(os.getcwd(), "testcase")
+        os.makedirs(testcase_folder, exist_ok=True)
+        output_file_path = os.path.join(testcase_folder, output_file_name)
 
         with open(output_file_path, 'w') as f:
             for step in self.logic_steps:
                 f.write(step + '\n')
+
 
     def _turn_left(self):
         directions = ["up", "left", "down", "right"]
@@ -441,7 +441,6 @@ class Program:
         self.agent_direction = directions[(current_idx + 1) % 4]
         self.display_map()
 
-    # Example implementation for turning right
     def _turn_right(self):
         directions = ["up", "right", "down", "left"]
         current_idx = directions.index(self.agent_direction)
