@@ -25,7 +25,7 @@ The detailed description of the project can be read in the [project description 
 - Clone the repository.
 - Install the `tkinter` and `pysat` packages if you haven't already.
 - Execute the `main.py` file in the repository directory with Python.
-- 
+
 To see how the program works, watch our [demo video](https://drive.google.com/drive/folders/1XIPGlaM1SMt5O8nxttCfa-f0JLqRgxES?usp=sharing)
 
 ## Project details
