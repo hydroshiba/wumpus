@@ -4,6 +4,9 @@
 # =============================================================================
 
 import itertools
+import time
+import copy
+
 from pysat.formula import CNF
 from pysat.solvers import Glucose3
 
@@ -21,7 +24,7 @@ class Knowledge:
 		self.__map = dict()
 		self.__cache = dict()
 		self.__clauses = set()
-		self.__rules = self.__set_rules()
+		self.__solver = Glucose3()
 		
 # Private
 	def __adjacent(self, x, y):
@@ -68,15 +71,14 @@ class Knowledge:
 
 		return cnf
 	
+	def __reset_solver(self):
+		self.__solver = Glucose3(self.__set_rules())
+		for clause in self.__clauses:
+			self.__solver.add_clause([clause])
+	
 	def __query(self, clause):
 		if clause in self.__cache: return self.__cache[clause]
-
-		cnf = CNF(from_clauses = self.__rules.clauses + [[x] for x in self.__clauses])
-		cnf.append([-clause])
-
-		solver = Glucose3()
-		solver.append_formula(cnf.clauses)
-		self.__cache[clause] = not solver.solve()
+		self.__cache[clause] = not self.__solver.solve(assumptions = [-clause])
 		return self.__cache[clause]
 	
 # Public
@@ -86,11 +88,15 @@ class Knowledge:
 			self.__clauses.add(clause)
 			self.__cache.clear()
 
+		self.__reset_solver()
+
 	def remove(self, property, x, y, existence = True):
 		clause = self.__symbol(property, x, y) * (1 if existence else -1)
 		if clause in self.__clauses:
 			self.__clauses.remove(clause)
 			self.__cache.clear()
+
+		self.__reset_solver()
 
 	def has(self, property, x, y, existence = True):
 		clause = self.__symbol(property, x, y) * (1 if existence else -1)
