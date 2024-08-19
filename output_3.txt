@@ -1,0 +1,219 @@
+(1,1): Forward
+(1,2): Forward
+(1,3): Forward
+(1,4): Turn Left
+(1,4): Turn Left
+(1,4): Forward
+(1,3): Turn Right
+(1,3): Forward
+(2,3): Turn Right
+(2,3): Forward
+(2,4): Forward
+(2,5): Turn Left
+(2,5): Turn Left
+(2,5): Forward
+(2,4): Turn Right
+(2,4): Forward
+(3,4): Turn Right
+(3,4): Forward
+(3,5): Turn Left
+(3,5): Turn Left
+(3,5): Forward
+(3,4): Forward
+(3,3): Forward
+(3,2): Turn Left
+(3,2): Forward
+(2,2): Turn Right
+(2,2): Forward
+(2,1): Turn Right
+(2,1): Forward
+(3,1): Forward
+(4,1): Grab
+(4,1): Forward
+(5,1): Forward
+(6,1): Turn Left
+(6,1): Turn Left
+(6,1): Forward
+(5,1): Turn Left
+(5,1): Forward
+(5,2): Turn Right
+(5,2): Forward
+(4,2): Turn Left
+(4,2): Forward
+(4,3): Grab
+(4,3): Turn Left
+(4,3): Forward
+(5,3): Forward
+(6,3): Turn Left
+(6,3): Turn Left
+(6,3): Forward
+(5,3): Turn Left
+(5,3): Forward
+(5,4): Forward
+(5,5): Forward
+(5,6): Turn Left
+(5,6): Turn Left
+(5,6): Forward
+(5,5): Turn Left
+(5,5): Forward
+(4,5): Turn Left
+(4,5): Forward
+(4,6): Turn Left
+(4,6): Turn Left
+(4,6): Forward
+(4,5): Forward
+(4,4): Turn Right
+(4,4): Forward
+(5,4): Forward
+(6,4): Forward
+(7,4): Turn Left
+(7,4): Forward
+(7,3): Forward
+(7,2): Turn Left
+(7,2): Turn Left
+(7,2): Forward
+(7,3): Turn Left
+(7,3): Forward
+(8,3): Forward
+(9,3): Turn Left
+(9,3): Turn Left
+(9,3): Forward
+(8,3): Turn Left
+(8,3): Forward
+(8,4): Turn Left
+(8,4): Turn Left
+(8,4): Forward
+(8,3): Forward
+(8,2): Forward
+(8,1): Turn Left
+(8,1): Forward
+(7,1): Turn Left
+(7,1): Forward
+(7,2): Turn Left
+(7,2): Forward
+(8,2): Forward
+(9,2): Turn Right
+(9,2): Forward
+(9,3): Turn Right
+(9,3): Forward
+(8,3): Forward
+(7,3): Forward
+(6,3): Turn Left
+(6,3): Forward
+(6,4): Forward
+(6,5): Forward
+(6,6): Forward
+(6,7): Turn Left
+(6,7): Turn Left
+(6,7): Forward
+(6,6): Turn Right
+(6,6): Forward
+(7,6): Forward
+(8,6): Forward
+(9,6): Forward
+(10,6): Turn Left
+(10,6): Forward
+(10,5): Forward
+(10,4): Turn Left
+(10,4): Turn Left
+(10,4): Forward
+(10,5): Forward
+(10,6): Forward
+(10,7): Forward
+(10,8): Forward
+(10,9): Turn Left
+(10,9): Turn Left
+(10,9): Forward
+(10,8): Turn Left
+(10,8): Forward
+(9,8): Turn Right
+(9,8): Forward
+(9,7): Turn Left
+(9,7): Forward
+(8,7): Turn Left
+(8,7): Forward
+(8,8): Forward
+(8,9): Turn Left
+(8,9): Turn Left
+(8,9): Forward
+(8,8): Turn Left
+(8,8): Forward
+(7,8): Turn Left
+(7,8): Forward
+(7,9): Forward
+(7,10): Turn Left
+(7,10): Forward
+(8,10): Forward
+(9,10): Turn Left
+(9,10): Turn Left
+(9,10): Forward
+(8,10): Forward
+(7,10): Forward
+(6,10): Forward
+(5,10): Forward
+(4,10): Forward
+(3,10): Forward
+(2,10): Forward
+(1,10): Grab
+(1,10): Turn Right
+(1,10): Forward
+(1,9): Forward
+(1,8): Forward
+(1,7): Forward
+(1,6): Turn Left
+(1,6): Turn Left
+(1,6): Forward
+(1,7): Turn Left
+(1,7): Forward
+(2,7): Turn Right
+(2,7): Forward
+(2,8): Forward
+(2,9): Turn Left
+(2,9): Forward
+(3,9): Forward
+(4,9): Grab
+(4,9): Forward
+(5,9): Forward
+(6,9): Turn Left
+(6,9): Forward
+(6,8): Turn Left
+(6,8): Forward
+(5,8): Forward
+(4,8): Forward
+(3,8): Turn Right
+(3,8): Forward
+(3,7): Turn Right
+(3,7): Forward
+(4,7): Turn Left
+(4,7): Forward
+(4,6): Forward
+(4,5): Turn Right
+(4,5): Forward
+(5,5): Forward
+(6,5): Forward
+(7,5): Forward
+(8,5): Forward
+(9,5): Forward
+(10,5): Turn Left
+(10,5): Forward
+(10,4): Forward
+(10,3): Forward
+(10,2): Forward
+(10,1): Grab
+(10,1): Turn Left
+(10,1): Turn Left
+(10,1): Forward
+(10,2): Turn Right
+(10,2): Forward
+(9,2): Forward
+(8,2): Forward
+(7,2): Turn Right
+(7,2): Forward
+(7,1): Turn Left
+(7,1): Forward
+(6,1): Forward
+(5,1): Forward
+(4,1): Forward
+(3,1): Forward
+(2,1): Forward
+(1,1): Exit the Cave

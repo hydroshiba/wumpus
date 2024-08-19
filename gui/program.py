@@ -1,8 +1,10 @@
 import tkinter as tk
+import os
+
 from tkinter import filedialog
 import tkinter.messagebox as messagebox
+
 from core import Agent
-import os
 
 class Program:
     def __init__(self, root):
@@ -458,9 +460,3 @@ class Program:
 
         # After modifying the map, refresh the display
         self.display_map()
-
-
-if __name__ == "__main__":
-    root = tk.Tk()
-    gui = Program(root)
-    root.mainloop()
